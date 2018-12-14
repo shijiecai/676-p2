@@ -1,0 +1,267 @@
+---
+title: "birth canal"
+author: "Shijie Cai"
+date: "2018/2/8"
+output: pdf_document
+---
+
+# pca
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+setwd("/Users/shijiecai/Desktop/MA 676/project2")
+library(ggplot2)
+library(gdata)
+library(reshape2)
+library(dplyr)
+```
+
+```{r}
+#data<-read.csv("Alldata.csv")
+#data<-data[,1:15]
+#library(factoextra)
+#res.pca <- prcomp(data, center = TRUE)
+#fviz_eig(res.pca)
+#summary(res.pca)
+#res.pca$rotation
+```
+
+
+```{r}
+data<-read.xls("BC Measures_Laudicina_March 30.xlsx", sheet = 1, header=F, na.strings=c("","NA"))
+birth<-read.csv("birth.csv")
+```
+
+```{r}
+hy<-data[c(3:9),c(1,4,9,14,19,24,29,34,39,44)]
+hy[,2:10] <- lapply(hy[,2:10], function(x) as.numeric(as.character(x)))
+colnames(hy)<-c("species","ap1","ap2","ap3","ap4","ap5","ap6","ap7","ap8","ap9")
+
+hy<-melt(hy, id.vars = "species", measure.vars = c("ap1","ap2","ap3","ap4","ap5","ap6","ap7","ap8","ap9"))
+
+
+hy <- ggplot(hy, aes(x = variable, y = value)) +geom_boxplot()+xlab("Hylobates lar")
+hy
+```
+
+```{r}
+pongo<-data[c(11:12),c(1,4,9,14,19,24,29,34,39,44)]
+pongo[,2:10] <- lapply(pongo[,2:10], function(x) as.numeric(as.character(x)))
+colnames(pongo)<-c("species","ap1","ap2","ap3","ap4","ap5","ap6","ap7","ap8","ap9")
+
+pongo<-melt(pongo, id.vars = "species", measure.vars = c("ap1","ap2","ap3","ap4","ap5","ap6","ap7","ap8","ap9"))
+
+
+pongo <- ggplot(pongo, aes(x = variable, y = value)) +geom_boxplot()+xlab(" Pongo")
+pongo
+```
+
+```{r}
+Gorilla<-data[c(13:17),c(1,4,9,14,19,24,29,34,39,44)]
+Gorilla[,2:10] <- lapply(Gorilla[,2:10], function(x) as.numeric(as.character(x)))
+colnames(Gorilla)<-c("species","ap1","ap2","ap3","ap4","ap5","ap6","ap7","ap8","ap9")
+
+Gorilla<-melt(Gorilla, id.vars = "species", measure.vars =c("ap1","ap2","ap3","ap4","ap5","ap6","ap7","ap8","ap9"))
+
+
+Gorilla <- ggplot(Gorilla, aes(x = variable, y = value)) +geom_boxplot()+xlab(" Gorilla")
+Gorilla
+```
+
+```{r}
+Pan.t<-data[c(18:19),c(1,4,9,14,19,24,29,34,39,44)]
+Pan.t[,2:10] <- lapply(Pan.t[,2:10], function(x) as.numeric(as.character(x)))
+colnames(Pan.t)<-c("species","ap1","ap2","ap3","ap4","ap5","ap6","ap7","ap8","ap9")
+
+Pan.t<-melt(Pan.t, id.vars = "species", measure.vars =c("ap1","ap2","ap3","ap4","ap5","ap6","ap7","ap8","ap9"))
+
+
+Pan.t <- ggplot(Pan.t, aes(x = variable, y = value)) +geom_boxplot()+xlab(" Pan.t")
+Pan.t
+```
+
+```{r}
+Alls<-data[c(3:19),c(1,4,9,14,19,24,29,34,39,44)]
+Alls[,2:10] <- lapply(Alls[,2:10], function(x) as.numeric(as.character(x)))
+Alls1<-Alls
+
+colnames(Alls)<-c("species","ap1","ap2","ap3","ap4","ap5","ap6","ap7","ap8","ap9")
+Alls<-melt(Alls, id.vars = "species", measure.vars =c("ap1","ap2","ap3","ap4","ap5","ap6","ap7","ap8","ap9"))
+
+Allsplot <- ggplot(Alls, aes(x =factor(species),y=value,fill=factor(species)))+geom_boxplot()+facet_wrap(~variable)+xlab(" All Species")+theme(axis.text.x = element_text(angle = 90, hjust = 1))
+Allsplot
+```
+
+```{r}
+Allsap<-Alls1%>%
+  group_by(V1)%>%
+  summarise(V4=mean(V4),V9=mean(V9),V14=mean(V14),V19=mean(V19),V24=mean(V24),V29=mean(V29),V34=mean(V34),V39=mean(V39),V44=mean(V44))
+
+colnames(Allsap)<-c("species","ap1","ap2","ap3","ap4","ap5","ap6","ap7","ap8","ap9")
+Allsap<-melt(Allsap, id.vars = "species", measure.vars =c("ap1","ap2","ap3","ap4","ap5","ap6","ap7","ap8","ap9"))
+
+g<-ggplot(Allsap, aes(x= variable, y=value))
+g<-g+geom_line(aes(group=species,color=species))
+g
+
+
+```
+
+```{r}
+fo<-c(64.2, 84.1, 97, 83)
+birth$fo <- fo[match(birth$Species2, c("Hylobates lar", "Pongo", "Gorilla", "Pan t."))]
+
+shoulder<-c(51.2, 81.8, 92, 84.9)
+birth$sh <- shoulder[match(birth$Species2, c("Hylobates lar", "Pongo", "Gorilla", "Pan t."))]
+
+birth1<-na.omit(birth)
+mean<-birth1%>%
+  group_by(Number)%>%
+  summarize(ap = min(AP), ml = min(ML.large))
+
+birth<-birth[c(1:38), c(3,11,12,13)]
+
+birth<-full_join(birth, mean)
+
+birth$apfo<-birth$ap-birth$fo
+birth$mlsh<-birth$ml-birth$sh
+
+#birth$apfo<- ifelse(birth$apfo>0, 1, 0)
+#birth$mlsh<- ifelse(birth$mlsh>0, 1, 0)
+
+```
+
+```{r}
+library(rpart)
+```
+
+```{r}
+fit<-rpart(Species2 ~ apfo,method = "class", data = birth)
+printcp(fit) # display the results 
+plotcp(fit) # visualize cross-validation results 
+summary(fit) # detailed summary of splits
+plot(fit, uniform = TRUE)
+text(fit, use.n=TRUE, all=TRUE, cex=.8)
+```
+
+```{r}
+library(rpart)
+library(party)
+library(zoo)
+```
+
+
+```{r}
+data[39,1]<-"Pan t."
+data[41,1]<-"Pan t."
+data[49,1]<-"Pan t."
+ap<-data[c(-1,-2, -18, -19),c(1,2,4,9,14,19,24,29,34,39,44,49,54,59,64) ]
+colnames(ap)<-c("Species","Number","ap1","ap2","ap3","ap4","ap5","ap6","ap7","ap8","ap9","ap10","ap11","ap12","ap13")
+
+fo<-c(64.2, 123.8, 84.1, 97, 83)
+ap$fo <- fo[match(ap$Species, c("Hylobates lar", "Symphalangus syndactylus","Pongo", "Gorilla", "Pan t."))]
+
+ap[,3:15]<-lapply(ap[,3:15], function(x) as.numeric(as.character(x)))
+
+
+#shoulder<-c(64.2, 123.8, 84.1, 97, 83)
+#ap$sh <- shoulder[match(ap$Species, c("Hylobates lar","Symphalangus syndactylus", "Pongo", "Gorilla", "Pan t."))]
+
+ap[is.na(ap)]<-999
+
+ap <- transform(ap, min = pmin(ap1,ap2,ap3,ap4,ap5,ap6,ap7,ap8,ap9,ap10,ap11,ap12,ap13))
+
+
+ap$apfo<-ap$min-ap$fo
+#ap$apfo<- ifelse(ap$apfo>0, 0, 1)
+#ap$apfo<-as.factor(ap$apfo)
+#birth$mlsh<-birth$ml-birth$sh
+```
+
+```{r}
+ap[ap == 999] <- NA
+fit.ap<-rpart(apfo ~ ap1+ap2+ap3+ap4+ap5+ap6+ap7+ap8+ap9+ap10+ap11+ap12+ap13,method = "class", data = ap)
+printcp(fit.ap) # display the results 
+plotcp(fit.ap) # visualize cross-validation results 
+summary(fit.ap) # detailed summary of splits
+plot(fit.ap, uniform = TRUE)
+text(fit.ap, use.n=TRUE, all=TRUE, cex=.8)
+```
+
+```{r}
+ap[ap == 999] <- NA
+#png(file = "decision_tree.png")
+
+# Create the tree with all aps.
+  output.tree <- ctree(
+  apfo ~Species + ap1+ap2+ap3+ap4+ap5+ap6+ap7+ap8+ap9+ap10+ap11+ap12+ap13, 
+  data = ap)
+
+# Plot the tree.
+plot(output.tree, main = "Plot.4 Decision tree for AP measurements")
+
+# Create the tree with species
+output.tree1 <- ctree(
+  apfo ~ Species, 
+  data = ap)
+
+# Plot the tree.
+plot(output.tree1, main = "Plot.5 Decision tree for species")
+
+
+```
+
+
+```{r}
+ml<-data[c(-1,-2, -18, -19),c(1,2,5,10,15,20,25,30,35,40,45,50,55,60,65) ]
+colnames(ml)<-c("Species","Number","ml1","ml2","ml3","ml4","ml5","ml6","ml7","ml8","ml9","ml10","ml11","ml12","ml13")
+
+sh<-c(51.2, 81.8, 92, 84.9, 118.3)
+ml$sh <- fo[match(ml$Species, c("Hylobates lar", "Symphalangus syndactylus","Pongo", "Gorilla", "Pan t."))]
+
+ml[,3:15]<-lapply(ml[,3:15], function(x) as.numeric(as.character(x)))
+
+ml[is.na(ml)]<-999
+
+ml <- transform(ml, min = pmin(ml1,ml2,ml3,ml4,ml5,ml6,ml7,ml8,ml9,ml10,ml11,ml12,ml13))
+
+
+ml$mlsh<-ml$min-ml$sh
+
+mlindex<-subset(ap, apfo<0)
+ml1<-ml[ml$Number %in% mlindex$Number,]
+
+#ml<-ml %>%join(mlindex)
+
+#ap$apfo<- ifelse(ap$apfo>0, 0, 1)
+#ap$apfo<-as.factor(ap$apfo)
+#birth$mlsh<-birth$ml-birth$sh
+```
+
+```{r}
+#ml[ml == 999] <- NA
+#png(file = "decision_tree.png")
+
+# Create the tree with all aps.
+  output.tree2 <- ctree(
+  mlsh ~ ml1+ml2+ml3+ml4+ml5+ml6+ml7+ml8+ml9+ml10+ml11+ml12+ml13, 
+  data = ml1)
+
+# Plot the tree.
+plot(output.tree2, main = "Plot.6 Decision tree for ML measurements")
+
+# Create the tree with species
+output.tree3 <- ctree(
+  mlsh ~ Species, 
+  data = ml1)
+
+# Plot the tree.
+plot(output.tree3)
+
+```
+
